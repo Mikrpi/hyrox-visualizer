@@ -4,9 +4,10 @@ const runLapPath   = document.getElementById('runLapPath');
 
 
 // AJASTIMIEN PAIKAT
-const TIMER_Y1 = 320;   // 🟢 Runner1 ylhäällä
-const TIMER_Y2 = 70;  // 🔴 Runner2 alhaalla (+70px)
-const TIMER_X_OFFSET = 25;
+const TIMER_BASE_X = 340;    // Burpee-alue vasen
+const TIMER_Y1 = 160;        // 🟢 Burpee yläpuoli
+const TIMER_Y2 = 200;        // 🔴 Burpee alapuoli  
+const TIMER_X_OFFSET = 30;
 
 // RUNNER1 TIMERIT
 const skiergTimer = document.getElementById('skiergTimer');
@@ -81,27 +82,12 @@ const lungesRoxOutPath = document.getElementById('lungesRoxOut');
 const lungesRoxOutLen = lungesRoxOutPath.getTotalLength();
 
 // WALLBALL
-// const wallballRoxInPath = document.getElementById('wallballRoxIn');
-// const wallballRoxInLen = wallballRoxInPath.getTotalLength();
-// const wallballRoxOutPath = document.getElementById('wallballRoxOut');
-// const wallballRoxOutLen = wallballRoxOutPath.getTotalLength();
-
 const wallballRoxInPath = document.getElementById('wallballRoxIn');
 const wallballRoxInLen = wallballRoxInPath ? wallballRoxInPath.getTotalLength() : 0;
 const wallballRoxOutPath = document.getElementById('wallballRoxOut');
 const wallballRoxOutLen = wallballRoxOutPath ? wallballRoxOutPath.getTotalLength() : 0;
 
 console.log('Wallball lens:', wallballRoxInLen, wallballRoxOutLen);
-
-// const skiergPath   = document.getElementById('skiergPath');
-// const sledPushPath = document.getElementById('sledPushPath');
-// const sledPullPath = document.getElementById('sledPullPath');
-// const farmersPath  = document.getElementById('farmersPath');
-// const lungesPath   = document.getElementById('lungesPath');
-// const burpeePath   = document.getElementById('burpeePath');
-// const rowPath      = document.getElementById('rowPath');
-// const wallsPath    = document.getElementById('wallsPath');
-
 
 // Runner1 -funktiot
 const runner       = document.getElementById('runner1');
@@ -136,7 +122,8 @@ function updateMasterTimer(ts) {
   if (!raceStartTime1) raceStartTime1 = ts;
   
   if (raceFinished1) {
-    masterTimer.textContent = '🏁 VALMIS';  // STOP!
+    const totalSec = Math.round((ts - raceStartTime1) / 1000 / speedFactor);
+    masterTimer.textContent = `🏁 ${formatTime(totalSec)}`;
     return;
   }
   
@@ -150,7 +137,8 @@ function updateMasterTimer2(ts) {
   if (!raceStartTime2) raceStartTime2 = ts;
   
   if (raceFinished2) {
-    masterTimer2.textContent = '🏁 VALMIS';  // STOP!
+    const totalSec = Math.round((ts - raceStartTime2) / 1000 / speedFactor);
+    masterTimer2.textContent = `🏁 ${formatTime(totalSec)}`;
     return;
   }
   
@@ -288,17 +276,6 @@ function formatTime(seconds) {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-if (raceConfig.autoAdjustWallball) {
-  ['splitsRunner1', 'splitsRunner2'].forEach(runner => {
-    const splits = raceConfig[runner];
-    if (splits.wallball_work && splits.wallball_rox_out) {
-      splits.wallball_work -= 10;     // Poista 10s work:ista
-      splits.wallball_rox_out += 10;  // Lisää rox_out:iin
-      console.log(`✅ ${runner}: wallball_work ${splits.wallball_work + 10}s → ${splits.wallball_work}s + rox_out ${splits.wallball_rox_out - 10}s → ${splits.wallball_rox_out}s`);
-    }
-  });
-}
-
 
 // Runner1
 function doStation(roxInPath, roxInLen, workPath, workLen, roxOutPath, roxOutLen, splits, stationName, timerId, done) {
@@ -314,7 +291,7 @@ function doStation(roxInPath, roxInLen, workPath, workLen, roxOutPath, roxOutLen
       
       // SIIRTÄ AJASTIN työpolun alkuun
       const workStartPoint = workPath.getPointAtLength(10);  // polun alku
-      timerElement.setAttribute('x', workStartPoint.x + 25);
+      timerElement.setAttribute('x', TIMER_BASE_X + TIMER_X_OFFSET);
       timerElement.setAttribute('y', TIMER_Y1);
       
       stationTimer(timerElement, splits, stationName, splits[`${stationName}_work`]);
@@ -348,10 +325,10 @@ function doStation(roxInPath, roxInLen, workPath, workLen, roxOutPath, roxOutLen
       // 🛑 PISTE-station
       console.log(`${stationName} WORK (point)`);
       
-      // SIIRTÄ AJASTIN roxIn PÄÄTEPISTEEN VIEREEN
+      // ajastin 
       const workPoint = roxInPath.getPointAtLength(roxInLen);
-      timerElement.setAttribute('x', workPoint.x + TIMER_X_OFFSET);
-      timerElement.setAttribute('y', TIMER_Y1);  // ← KIINTEÄ Y1!
+      timerElement.setAttribute('x', TIMER_BASE_X + TIMER_X_OFFSET);
+      timerElement.setAttribute('y', TIMER_Y1);
 
       stationTimer(timerElement, splits, stationName, splits[`${stationName}_work`]);
       waitAtPoint(roxInPath, roxInLen, splits[`${stationName}_work`], roxOut);
@@ -379,9 +356,8 @@ function doStation2(roxInPath, roxInLen, workPath, workLen, roxOutPath, roxOutLe
       
       // SIIRTÄ AJASTIN työpolun alkuun
       const workStartPoint = workPath.getPointAtLength(10);  // polun alku
-      //timerElement.setAttribute('x', workPoint.x + TIMER_X_OFFSET);
-      timerElement.setAttribute('x', workStartPoint.x + TIMER_X_OFFSET);
-      timerElement.setAttribute('y', TIMER_Y2);  // ← KIINTEÄ Y2!
+      timerElement.setAttribute('x', TIMER_BASE_X + TIMER_X_OFFSET);
+      timerElement.setAttribute('y', TIMER_Y2);
 
       
       stationTimer(timerElement, splits, stationName, splits[`${stationName}_work`]);
@@ -417,8 +393,8 @@ function doStation2(roxInPath, roxInLen, workPath, workLen, roxOutPath, roxOutLe
       
       // SIIRTÄ AJASTIN roxIn PÄÄTEPISTEEN VIEREEN
       const workPoint = roxInPath.getPointAtLength(roxInLen);
-      timerElement.setAttribute('x', workPoint.x + 25);
-      timerElement.setAttribute('y', workPoint.y - 25);
+      timerElement.setAttribute('x', TIMER_BASE_X + TIMER_X_OFFSET);
+      timerElement.setAttribute('y', TIMER_Y2);
       
       stationTimer(timerElement, splits, stationName, splits[`${stationName}_work`]);
       waitAtPoint2(roxInPath, roxInLen, splits[`${stationName}_work`], roxOut);
